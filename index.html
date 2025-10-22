@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardinal Health Shares Outstanding</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        #data {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .highlight {
+            font-weight: bold;
+            color: green;
+        }
+        .alert {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="entity-name">Cardinal Health</h1>
+    <div id="data">
+        <p>Maximum Shares Outstanding: <span id="share-max-value" class="highlight"></span> (FY: <span id="share-max-fy" class="highlight"></span>)</p>
+        <p>Minimum Shares Outstanding: <span id="share-min-value" class="alert"></span> (FY: <span id="share-min-fy" class="alert"></span>)</p>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const CIK = urlParams.get('CIK') || '0000721371'; // Default to Cardinal Health CIK
+        const proxyUrl = 'https://api.example.com/fetch?url='; // Replace with actual proxy
+        const secUrl = `https://data.sec.gov/api/xbrl/companyconcept/CIK${CIK}/dei/EntityCommonStockSharesOutstanding.json`;
+
+        fetch(proxyUrl + encodeURIComponent(secUrl), {
+            headers: { 'User-Agent': 'YourUserAgent/1.0' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const entityName = data.entityName;
+            document.title = entityName + ' Shares Outstanding';
+            document.getElementById('entity-name').textContent = entityName;
+
+            const shares = data.units.shares.filter(entry => entry.fy > '2020' && entry.val);
+            if (shares.length > 0) {
+                const maxShare = shares.reduce((max, entry) => entry.val > max.val ? entry : max);
+                const minShare = shares.reduce((min, entry) => entry.val < min.val ? entry : min);
+
+                document.getElementById('share-max-value').textContent = maxShare.val;
+                document.getElementById('share-max-fy').textContent = maxShare.fy;
+                document.getElementById('share-min-value').textContent = minShare.val;
+                document.getElementById('share-min-fy').textContent = minShare.fy;
+            } else {
+                document.getElementById('share-max-value').textContent = 'N/A';
+                document.getElementById('share-min-value').textContent = 'N/A';
+            }
+        })
+        .catch(err => console.error('Fetch error:', err));
+    </script>
+</body>
+</html>
